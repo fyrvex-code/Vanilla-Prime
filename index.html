@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vanilla Bloom — Главная</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* Hero */
+#hero { position:relative; min-height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:0 2rem; }
+#hero-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:0; }
+#hero-veil {
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 30%, rgba(194,24,91,0.07) 0%, transparent 65%),
+    linear-gradient(to bottom, rgba(13,0,8,0.22) 0%, rgba(13,0,8,0.08) 35%, rgba(13,0,8,0.55) 72%, rgba(13,0,8,1) 100%);
+}
+.hero-body {
+  position:relative; z-index:2; text-align:center; max-width:880px;
+  padding:7rem 0 5rem; display:flex; flex-direction:column; align-items:center;
+}
+.hero-pill { animation:fadeDown 0.7s ease both; margin-bottom:1.8rem; }
+.hero-kicker {
+  font-family:'Cinzel',serif; font-size:clamp(1.1rem,2.2vw,1.6rem);
+  color:var(--cherry-400); margin-bottom:0.25rem;
+  animation:fadeUp 0.8s 0.1s ease both; opacity:0;
+}
+.hero-h1 {
+  font-size:clamp(3.5rem,10vw,8rem); line-height:0.95; color:var(--white);
+  text-shadow:0 0 100px rgba(194,24,91,0.25), 0 4px 50px rgba(0,0,0,0.65);
+  animation:fadeUp 0.85s 0.18s ease both; opacity:0;
+}
+.hero-sub {
+  font-size:clamp(1rem,2vw,1.18rem); color:var(--text2); max-width:550px;
+  line-height:1.78; margin-top:1.6rem; margin-bottom:2.4rem;
+  animation:fadeUp 0.85s 0.28s ease both; opacity:0;
+}
+.hero-btns { display:flex; flex-wrap:wrap; gap:0.75rem; justify-content:center; animation:fadeUp 0.85s 0.38s ease both; opacity:0; }
+.hero-stats {
+  display:flex; background:var(--glass); border:1px solid var(--border);
+  border-radius:var(--r-md); backdrop-filter:blur(20px); overflow:hidden;
+  margin-top:3.5rem; width:100%; max-width:620px;
+  animation:fadeUp 0.85s 0.5s ease both; opacity:0;
+}
+.hs { flex:1; padding:1.1rem 1.5rem; border-right:1px solid var(--border); text-align:center; }
+.hs:last-child { border-right:none; }
+.hs-v { font-family:'Cinzel',serif; font-size:1.35rem; font-weight:900; color:var(--cherry-300); line-height:1; margin-bottom:0.28rem; }
+.hs-l { font-size:0.68rem; font-weight:600; color:var(--text3); letter-spacing:0.08em; text-transform:uppercase; }
+
+.hero-scroll { position:absolute; bottom:2.5rem; left:50%; transform:translateX(-50%); z-index:2; display:flex; flex-direction:column; align-items:center; gap:0.5rem; color:var(--text3); font-size:0.68rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; animation:fadeUp 1s 0.9s ease both; opacity:0; }
+.hero-scroll-bar { width:1px; height:44px; background:linear-gradient(to bottom, transparent, var(--cherry-400)); animation:breathe 2s ease-in-out infinite; }
+@keyframes breathe { 0%,100%{opacity:.35;transform:scaleY(.6)} 50%{opacity:1;transform:scaleY(1)} }
+
+/* Ticker */
+#ticker { overflow:hidden; background:var(--bg1); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:0.82rem 0; position:relative; }
+#ticker::before,#ticker::after { content:''; position:absolute; top:0; bottom:0; width:100px; z-index:1; pointer-events:none; }
+#ticker::before { left:0; background:linear-gradient(to right,var(--bg1),transparent); }
+#ticker::after  { right:0; background:linear-gradient(to left, var(--bg1),transparent); }
+.ticker-track { display:flex; width:max-content; animation:ticker 32s linear infinite; }
+.ticker-item { display:flex; align-items:center; gap:0.55rem; padding:0 2rem; font-size:0.8rem; font-weight:600; color:var(--text2); white-space:nowrap; }
+.ticker-item::after { content:'·'; color:var(--cherry-800); margin-left:2rem; }
+@keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+/* Feature cards */
+.feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; }
+.feat-card { padding:2rem 1.75rem; }
+.feat-ico { width:52px; height:52px; border-radius:var(--r-sm); background:linear-gradient(135deg,rgba(194,24,91,0.18),rgba(244,143,177,0.06)); border:1px solid rgba(194,24,91,0.15); display:flex; align-items:center; justify-content:center; font-size:1.55rem; margin-bottom:1rem; transition:box-shadow var(--t-mid); }
+.feat-card:hover .feat-ico { box-shadow:0 0 22px rgba(194,24,91,0.32); }
+.feat-card h3 { font-size:1rem; font-weight:700; color:var(--white); margin-bottom:0.5rem; }
+.feat-card p  { font-size:0.875rem; color:var(--text2); line-height:1.65; }
+
+/* Why split */
+#why { background:var(--bg2); position:relative; overflow:hidden; }
+#why::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 55% 65% at 80% 50%,rgba(194,24,91,0.07) 0%,transparent 70%); pointer-events:none; }
+.why-grid { display:grid; grid-template-columns:1fr 1fr; gap:5rem; align-items:center; }
+.why-nums { display:flex; gap:2.5rem; margin-top:2.5rem; padding-top:2.5rem; border-top:1px solid var(--border); }
+.why-num h3 { font-family:'Cinzel',serif; font-size:2.2rem; font-weight:900; color:var(--cherry-300); line-height:1; }
+.why-num p  { font-size:0.78rem; color:var(--text3); margin-top:0.3rem; }
+.why-cards { display:grid; grid-template-columns:1fr 1fr; gap:0.9rem; }
+.wc { padding:1.35rem; border-radius:var(--r-md); background:rgba(22,0,16,0.7); border:1px solid var(--border); backdrop-filter:blur(12px); transition:transform var(--t-mid),border-color var(--t-mid),box-shadow var(--t-mid); }
+.wc:hover { transform:translateY(-4px); border-color:var(--border-h); box-shadow:var(--shadow-md); }
+.wc .em { font-size:1.7rem; margin-bottom:0.55rem; }
+.wc h4 { font-size:0.88rem; font-weight:700; color:var(--white); margin-bottom:0.3rem; }
+.wc p  { font-size:0.79rem; color:var(--text2); line-height:1.55; }
+
+/* News preview */
+.news-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; }
+.nc { display:flex; flex-direction:column; overflow:hidden; padding:0; cursor:pointer; }
+.nc-thumb { height:175px; display:flex; align-items:center; justify-content:center; font-size:4rem; position:relative; overflow:hidden; transition:transform var(--t-mid); }
+.nc:hover .nc-thumb { transform:scale(1.03); }
+.nc-thumb::after { content:''; position:absolute; bottom:0; left:0; right:0; height:50px; background:linear-gradient(transparent,rgba(13,0,8,.9)); }
+.nc-thumb.nether { background:linear-gradient(135deg,#1C0808,#2D0A0A); }
+.nc-thumb.end    { background:linear-gradient(135deg,#08081C,#1A0020); }
+.nc-thumb.update { background:linear-gradient(135deg,#1A000E,#2D0018); }
+.nc-body { padding:1.4rem; flex:1; display:flex; flex-direction:column; gap:0.55rem; }
+.nc-date  { font-size:0.7rem; font-weight:600; color:var(--text3); }
+.nc-title { font-size:1rem; font-weight:700; color:var(--white); line-height:1.35; }
+.nc-desc  { font-size:0.845rem; color:var(--text2); line-height:1.62; flex:1; }
+
+/* CTA */
+#cta { position:relative; overflow:hidden; }
+.cta-bg { position:absolute; inset:0; background:linear-gradient(135deg,rgba(194,24,91,0.14) 0%,rgba(13,0,8,0.82) 50%,rgba(194,24,91,0.08) 100%),var(--bg2); }
+.cta-dots {
+  position:absolute; inset:0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%,rgba(244,143,177,0.6) 0%,transparent 100%),
+    radial-gradient(1px 1px at 90% 75%,rgba(244,143,177,0.5) 0%,transparent 100%),
+    radial-gradient(2px 2px at 50% 10%,rgba(194,24,91,0.45) 0%,transparent 100%),
+    radial-gradient(1px 1px at 30% 70%,rgba(244,143,177,0.55) 0%,transparent 100%),
+    radial-gradient(1px 1px at 70% 40%,rgba(194,24,91,0.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 85% 15%,rgba(244,143,177,0.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 15% 85%,rgba(194,24,91,0.45) 0%,transparent 100%);
+}
+.cta-inner { position:relative; z-index:1; text-align:center; padding:6rem 2rem; max-width:700px; margin:0 auto; }
+.cta-inner h2 { font-size:clamp(2rem,4.5vw,3.2rem); color:var(--white); margin-bottom:1.1rem; }
+.cta-inner p  { font-size:1.05rem; color:var(--text2); margin-bottom:2.2rem; line-height:1.72; }
+.cta-btns { display:flex; flex-wrap:wrap; gap:0.75rem; justify-content:center; }
+
+/* Footer socials SVG shorthand */
+.disc-ico { fill:currentColor; }
+
+@media(max-width:900px) { .why-grid{grid-template-columns:1fr;gap:3rem;} .why-cards{order:-1;} .news-row{grid-template-columns:1fr;} .feat-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:600px) { .feat-grid{grid-template-columns:1fr;} .why-cards{grid-template-columns:1fr 1fr;} .hero-stats{flex-direction:column;} .hs{border-right:none;border-bottom:1px solid var(--border);} .hs:last-child{border-bottom:none;} .hero-btns .btn{flex:1;min-width:130px;} }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-ico">🌸</div>
+    <span class="nav-logo-txt">Vanilla <em>Bloom</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Главная</a></li>
+    <li><a href="about.html">О сервере</a></li>
+    <li><a href="news.html">Новости</a></li>
+    <li><a href="donate.html">Донат</a></li>
+    <li><a href="wiki.html">Вики</a></li>
+    <li><a href="play.html">Играть</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="https://discord.gg/" target="_blank" class="btn btn-discord btn-sm">💬 Discord</a>
+    <a href="play.html" class="btn btn-bloom btn-sm">🌸 Играть</a>
+  </div>
+  <button class="nav-ham" id="navHam"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <a href="index.html">Главная</a><a href="about.html">О сервере</a>
+  <a href="news.html">Новости</a><a href="donate.html">Донат</a>
+  <a href="wiki.html">Вики</a><a href="play.html">Играть</a>
+  <div class="drawer-btns">
+    <a href="https://discord.gg/" target="_blank" class="btn btn-discord">💬 Discord</a>
+    <a href="play.html" class="btn btn-bloom">🌸 Играть</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div id="hero-veil"></div>
+  <div class="hero-body">
+    <div class="hero-pill">
+      <span class="badge"><span class="badge-dot"></span>Приватный SMP · Java 1.21 · v0.4.0</span>
+    </div>
+    <p class="hero-kicker t-head">Добро пожаловать в</p>
+    <h1 class="hero-h1 t-display">Vanilla&nbsp;<span class="t-grad">Bloom</span></h1>
+    <p class="hero-sub">Приватный ванильный Minecraft‑сервер с атмосферой цветущей сакуры, живым сообществом и честной игрой без pay-to-win.</p>
+    <div class="hero-btns">
+      <a href="play.html"   class="btn btn-bloom   btn-xl">🌸 Начать играть</a>
+      <a href="donate.html" class="btn btn-outline  btn-xl">💎 Донат</a>
+      <a href="https://discord.gg/" target="_blank" class="btn btn-discord btn-xl">💬 Discord</a>
+      <a href="https://t.me/"       target="_blank" class="btn btn-tg      btn-xl">📢 Telegram</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hs"><div class="hs-v">1.21</div><div class="hs-l">Версия MC</div></div>
+      <div class="hs"><div class="hs-v">v0.4</div><div class="hs-l">Апдейт</div></div>
+      <div class="hs"><div class="hs-v">3</div><div class="hs-l">Измерения</div></div>
+      <div class="hs"><div class="hs-v">SMP</div><div class="hs-l">Режим</div></div>
+    </div>
+  </div>
+  <div class="hero-scroll"><div class="hero-scroll-bar"></div><span>Листай</span></div>
+</section>
+
+<!-- TICKER -->
+<div id="ticker">
+  <div class="ticker-track">
+    <span class="ticker-item">🌸 Ваниль без лишних плагинов</span>
+    <span class="ticker-item">🛡️ Активная администрация</span>
+    <span class="ticker-item">⚡ Стабильный TPS</span>
+    <span class="ticker-item">🌍 Постепенное открытие миров</span>
+    <span class="ticker-item">🔥 Ад открыт</span>
+    <span class="ticker-item">🌌 Энд открыт</span>
+    <span class="ticker-item">💎 Честный донат</span>
+    <span class="ticker-item">👥 Тёплое комьюнити</span>
+    <span class="ticker-item">🔒 Защита от гриферов</span>
+    <span class="ticker-item">🎉 Ивенты каждый месяц</span>
+    <span class="ticker-item">🌸 Ваниль без лишних плагинов</span>
+    <span class="ticker-item">🛡️ Активная администрация</span>
+    <span class="ticker-item">⚡ Стабильный TPS</span>
+    <span class="ticker-item">🌍 Постепенное открытие миров</span>
+    <span class="ticker-item">🔥 Ад открыт</span>
+    <span class="ticker-item">🌌 Энд открыт</span>
+    <span class="ticker-item">💎 Честный донат</span>
+    <span class="ticker-item">👥 Тёплое комьюнити</span>
+    <span class="ticker-item">🔒 Защита от гриферов</span>
+    <span class="ticker-item">🎉 Ивенты каждый месяц</span>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section style="background:var(--bg1);position:relative;">
+  <div class="wrap sp">
+    <div class="sec-hd rev">
+      <span class="t-label">О сервере</span>
+      <h2 class="t-head">Всё для идеальной игры</h2>
+      <p>Vanilla Bloom — это сервер, где атмосфера цветущей сакуры встречается с честным ванильным Minecraft.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="card feat-card card-glow rev d1"><div class="feat-ico">🌸</div><h3>Честная ваниль</h3><p>Никакого pay-to-win, никаких читов. Только чистый Minecraft в лучшем виде.</p></div>
+      <div class="card feat-card card-glow rev d2"><div class="feat-ico">🛡️</div><h3>Активная команда</h3><p>Администраторы всегда на связи. Справедливо и быстро.</p></div>
+      <div class="card feat-card card-glow rev d3"><div class="feat-ico">⚡</div><h3>Высокая производительность</h3><p>Мощные серверы, стабильный TPS и минимальные задержки.</p></div>
+      <div class="card feat-card card-glow rev d4"><div class="feat-ico">🔒</div><h3>Защита территорий</h3><p>Claims, бэкапы и строгие правила защищают твои постройки.</p></div>
+      <div class="card feat-card card-glow rev d5"><div class="feat-ico">🎉</div><h3>Ивенты и события</h3><p>Открытия измерений — это праздники для всего сервера.</p></div>
+      <div class="card feat-card card-glow rev d6"><div class="feat-ico">👥</div><h3>Живое сообщество</h3><p>Тёплая атмосфера, где каждый игрок — часть большой семьи.</p></div>
+    </div>
+    <div style="margin-top:2.5rem;text-align:center;">
+      <a href="about.html" class="btn btn-outline btn-lg">Подробнее о сервере →</a>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section id="why">
+  <div class="wrap sp">
+    <div class="why-grid">
+      <div class="rev-l">
+        <span class="t-label">Ценности</span>
+        <h2 class="t-head" style="font-size:clamp(1.8rem,3.5vw,2.8rem);color:var(--white);margin:0.65rem 0 1rem;">Уникальная атмосфера<br>честной игры</h2>
+        <p style="color:var(--text2);line-height:1.72;max-width:440px;">Как лепестки сакуры — красиво, недолговечно, незабываемо. Каждый сезон приносит что-то новое.</p>
+        <div class="why-nums">
+          <div class="why-num"><h3>v0.4</h3><p>Текущая версия</p></div>
+          <div class="why-num"><h3>1.21</h3><p>Minecraft Java</p></div>
+          <div class="why-num"><h3>3+</h3><p>Измерения</p></div>
+        </div>
+        <div style="margin-top:2rem;">
+          <a href="about.html" class="btn btn-bloom btn-lg">Узнать больше</a>
+        </div>
+      </div>
+      <div class="why-cards rev-r">
+        <div class="wc"><div class="em">🌸</div><h4>Тёплое комьюнити</h4><p>Живые разговоры, общие стройки, настоящая дружба.</p></div>
+        <div class="wc"><div class="em">⚔️</div><h4>Честное PvP</h4><p>Только навык и стратегия, никаких скрытых бонусов.</p></div>
+        <div class="wc"><div class="em">🌋</div><h4>Открытие миров</h4><p>Ад и Энд — события для всего сервера, не просто клик.</p></div>
+        <div class="wc"><div class="em">📰</div><h4>Частые патчи</h4><p>Регулярные обновления с новым контентом и фиксами.</p></div>
+        <div class="wc"><div class="em">🎮</div><h4>Живая атмосфера</h4><p>Органичные события и мир, который ощущается настоящим.</p></div>
+        <div class="wc"><div class="em">💚</div><h4>Без лишнего</h4><p>Только чистый Minecraft — ничего лишнего.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWS PREVIEW -->
+<section style="background:var(--bg1);">
+  <div class="wrap sp">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;" class="rev">
+      <div>
+        <span class="t-label">Новости</span>
+        <h2 class="t-head" style="font-size:clamp(1.8rem,3.5vw,2.8rem);color:var(--white);margin-top:0.65rem;margin-bottom:0;">Последние события</h2>
+      </div>
+      <a href="news.html" class="btn btn-outline">Все новости →</a>
+    </div>
+    <div class="news-row">
+      <div class="card nc card-glow rev d1">
+        <div class="nc-thumb nether">🔥</div>
+        <div class="nc-body">
+          <span class="nc-date">📅 12 июня 2025</span>
+          <h3 class="nc-title">Открытие Нижнего мира</h3>
+          <p class="nc-desc">Врата открыты! Крепости, бастионы и опасности Ада ждут первых исследователей.</p>
+          <a href="news.html" class="btn btn-outline btn-sm" style="margin-top:0.75rem;">Читать →</a>
+        </div>
+      </div>
+      <div class="card nc card-glow rev d2">
+        <div class="nc-thumb end">🌌</div>
+        <div class="nc-body">
+          <span class="nc-date">📅 28 июля 2025</span>
+          <h3 class="nc-title">Открытие Энда</h3>
+          <p class="nc-desc">Дракон Энда повержен! Элитра, острова и финальное измерение теперь доступны.</p>
+          <a href="news.html" class="btn btn-outline btn-sm" style="margin-top:0.75rem;">Читать →</a>
+        </div>
+      </div>
+      <div class="card nc card-glow rev d3">
+        <div class="nc-thumb update">📢</div>
+        <div class="nc-body">
+          <span class="nc-date">📅 15 августа 2025</span>
+          <h3 class="nc-title">Обновление 0.4.0</h3>
+          <p class="nc-desc">Система достижений, новый спавн, улучшенная защита и этот новый сайт.</p>
+          <a href="news.html" class="btn btn-outline btn-sm" style="margin-top:0.75rem;">Читать →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-bg"></div>
+  <div class="cta-dots"></div>
+  <div class="cta-inner rev">
+    <span class="t-label" style="display:block;margin-bottom:1rem;">Готов начать?</span>
+    <h2 class="t-head">Твоё приключение<br>начинается <span class="t-grad">сейчас</span></h2>
+    <p>Живое сообщество, атмосфера цветущей сакуры и мир, который ждёт именно тебя.</p>
+    <div class="cta-btns">
+      <a href="play.html" class="btn btn-bloom btn-xl">🌸 Начать играть</a>
+      <a href="https://discord.gg/" target="_blank" class="btn btn-discord btn-xl">💬 Discord</a>
+      <a href="donate.html" class="btn btn-outline btn-xl">💎 Поддержать</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <div class="footer-body">
+    <div class="footer-brand">
+      <div class="footer-brand-logo"><div class="footer-brand-ico">🌸</div><span class="footer-brand-name">Vanilla <em>Bloom</em></span></div>
+      <p>Приватный ванильный Minecraft‑сервер с атмосферой цветущей сакуры и живым сообществом.</p>
+      <div class="footer-socials">
+        <a href="https://discord.gg/" target="_blank" class="footer-soc" title="Discord">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+        </a>
+        <a href="https://t.me/" target="_blank" class="footer-soc" title="Telegram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer-col"><h5>Страницы</h5><ul><li><a href="index.html">Главная</a></li><li><a href="about.html">О сервере</a></li><li><a href="news.html">Новости</a></li><li><a href="wiki.html">Вики</a></li></ul></div>
+    <div class="footer-col"><h5>Игра</h5><ul><li><a href="play.html">Как играть</a></li><li><a href="donate.html">Донат</a></li><li><a href="wiki.html">FAQ</a></li></ul></div>
+    <div class="footer-col"><h5>Сообщество</h5><ul><li><a href="https://discord.gg/" target="_blank">Discord</a></li><li><a href="https://t.me/" target="_blank">Telegram</a></li><li><a href="https://example.com" target="_blank">Магазин</a></li></ul></div>
+  </div>
+  <div class="footer-bottom"><span class="footer-copy">© 2025 Vanilla Bloom. Все права защищены.</span><span class="footer-ver">v0.4.0</span></div>
+</footer>
+
+<div id="toast"><span class="ti">✓</span><span id="toastTxt"></span></div>
+<script src="app.js"></script>
+<script>initCanvas('hero-canvas');</script>
+</body>
+</html>
