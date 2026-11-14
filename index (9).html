@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Luma World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sacramento&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --pink:#ff8fc7; --pink2:#ff4fb0; --bg:#0b090c; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; background:var(--bg); color:#fff; overflow:hidden;
+    font-family:'Pixelify Sans', 'Courier New', monospace; }
+
+  /* ---------- ИНТРО: неоновая надпись «пишется от руки» ---------- */
+  #intro { position:fixed; inset:0; z-index:10; display:grid; place-items:center; background:#050405;
+    transition:opacity .9s ease, filter .9s ease; }
+  #intro.out { opacity:0; filter:blur(18px); pointer-events:none; }
+  #write { font-family:'Sacramento','Brush Script MT',cursive; font-size:clamp(64px, 20vw, 170px);
+    line-height:1.2; white-space:nowrap; color:#ffd1ec; padding:0 .15em;
+    text-shadow:0 0 4px #ffb3e6, 0 0 12px #ff7ac8, 0 0 26px #ff4fb0, 0 0 54px #ff2e9a;
+    clip-path:inset(-60px 100% -60px -30px); animation:flicker 3s infinite 3s; }
+  @keyframes flicker { 0%,100%{opacity:1} 46%{opacity:1} 48%{opacity:.82} 50%{opacity:1} 78%{opacity:.9} 80%{opacity:1} }
+
+  /* ---------- ГЛАВНАЯ ---------- */
+  .page { position:fixed; inset:0; opacity:0; transition:opacity 1s ease .15s; }
+  .page.show { opacity:1; }
+  .bg { position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 50% 100%, #0b090c 25%, transparent 75%),
+      linear-gradient(180deg, transparent 40%, #0b090c 85%),
+      conic-gradient(#3a1630 25%, #1c0f1a 0 50%, #3a1630 0 75%, #1c0f1a 0) 0 0/clamp(90px,24vw,200px) clamp(90px,24vw,200px);
+    opacity:.55; }
+  canvas { position:absolute; inset:0; width:100%; height:100%; image-rendering:pixelated; }
+
+  header { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:14px;
+    padding:calc(env(safe-area-inset-top,0px) + 16px) 20px 0; }
+  .logo { width:44px; height:44px; image-rendering:pixelated; }
+  .tag { font:13px 'Courier New',monospace; color:var(--pink); background:#0e0b10; padding:8px 12px; border-radius:4px; }
+  .sp { flex:1; }
+  .flag { width:36px; height:28px; border-radius:7px; box-shadow:0 0 0 2px #ffffff22;
+    background:linear-gradient(#fff 33%, #1c57a5 0 66%, #d52b1e 0); }
+  .burger { width:30px; display:grid; gap:7px; margin-left:8px; }
+  .burger i { height:2px; background:#fff; border-radius:2px; }
+  .burger i:nth-child(2) { background:var(--pink2); }
+
+  main { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:flex-end; text-align:center; padding:0 20px calc(env(safe-area-inset-bottom,0px) + 18vh); gap:22px; }
+  h1 { font-weight:700; letter-spacing:.02em; text-transform:uppercase; font-size:clamp(34px, 11vw, 96px); line-height:1;
+    background:linear-gradient(90deg,#ff9ad0 0%,#fff 28%,#fff 100%); -webkit-background-clip:text; background-clip:text;
+    color:transparent; filter:drop-shadow(0 0 18px #ff4fb055); }
+  .sub { font-weight:500; text-transform:uppercase; font-size:clamp(14px, 3.8vw, 24px); color:#c9cbd6; letter-spacing:.03em; }
+  .sub b { color:var(--pink); font-weight:500; }
+  .btn { display:inline-flex; align-items:center; gap:12px; margin-top:12px; padding:18px 34px; color:#fff;
+    text-transform:uppercase; font:500 clamp(15px,4vw,20px) 'Pixelify Sans',monospace; text-decoration:none;
+    background:#0f0d13cc; border:2px solid #2a2630; border-radius:16px; transition:.2s; }
+  .btn:hover { border-color:var(--pink2); box-shadow:0 0 22px #ff4fb066; transform:translateY(-2px); }
+  .btn svg { width:24px; height:24px; fill:currentColor; }
+
+  /* появление элементов по очереди */
+  .rise { opacity:0; transform:translateY(24px); transition:opacity .8s ease, transform .8s ease; }
+  .show .rise { opacity:1; transform:none; }
+  .show .r1 { transition-delay:.35s } .show .r2 { transition-delay:.6s } .show .r3 { transition-delay:.85s }
+</style>
+</head>
+<body>
+
+<div id="intro"><div id="write">Luma World</div></div>
+
+<div class="page" id="page">
+  <div class="bg"></div>
+  <canvas id="petals"></canvas>
+
+  <header>
+    <!-- пиксельный цветок-логотип -->
+    <svg class="logo" viewBox="0 0 5 5" shape-rendering="crispEdges">
+      <g fill="#ff9ad0"><rect x="2" y="0" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/></g>
+      <g fill="#ffc9e4"><rect x="1" y="1" width="3" height="3"/></g>
+      <g fill="#ff6fb8"><rect x="2" y="2" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="1" y="2" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/></g>
+    </svg>
+    <span class="tag">luma.world</span>
+    <span class="sp"></span>
+    <span class="flag"></span>
+    <span class="burger"><i></i><i></i><i></i></span>
+  </header>
+
+  <main>
+    <h1 class="rise r1">Luma World</h1>
+    <p class="sub rise r2">Твой Minecraft, в <b>полном расцвете.</b></p>
+    <a class="btn rise r3" href="https://github.com/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+      Наш GitHub
+    </a>
+  </main>
+</div>
+
+<script>
+/* ============ 1. Надпись, которую «пишет человек» ============ */
+const TEXT = 'Luma World';
+const intro = document.getElementById('intro');
+const w = document.getElementById('write');
+const page = document.getElementById('page');
+
+function startWriting() {
+  const cs = getComputedStyle(w);
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.font = `${cs.fontSize} ${cs.fontFamily}`;
+  const pad = parseFloat(cs.paddingLeft);
+  const total = w.offsetWidth;
+  // координаты правого края каждой буквы
+  const pos = [0];
+  for (let i = 1; i <= TEXT.length; i++) pos.push(pad + ctx.measureText(TEXT.slice(0, i)).width);
+  pos[0] = 0; pos[TEXT.length] = total;
+
+  // «человеческий» тайминг: у каждой буквы своя скорость, между буквами паузы
+  const segs = []; let t = 350;
+  for (let i = 0; i < TEXT.length; i++) {
+    const dur = 170 + Math.random() * 190;
+    segs.push({ t0: t, t1: t + dur, x0: pos[i], x1: pos[i + 1] });
+    t += dur + (TEXT[i] === ' ' ? 260 + Math.random() * 120 : 20 + Math.random() * 90);
+  }
+  const end = t;
+  const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+  const t0 = performance.now();
+
+  (function frame(now) {
+    const e = now - t0;
+    let x = 0;
+    for (const s of segs) {
+      if (e >= s.t1) x = s.x1;
+      else if (e >= s.t0) { x = s.x0 + (s.x1 - s.x0) * ease((e - s.t0) / (s.t1 - s.t0)); break; }
+      else break;
+    }
+    w.style.clipPath = `inset(-60px ${Math.max(total - x, 0)}px -60px -30px)`;
+    if (e < end) requestAnimationFrame(frame);
+    else setTimeout(reveal, 600);
+  })(t0);
+}
+
+/* ============ 2. Переход: размытие → главная страница ============ */
+function reveal() {
+  intro.classList.add('out');
+  page.classList.add('show');
+  initPetals();
+  setTimeout(() => intro.remove(), 1000);
+}
+
+/* ============ 3. Пиксельные лепестки ============ */
+function initPetals() {
+  const cv = document.getElementById('petals'), c = cv.getContext('2d');
+  let W, H, dpr = Math.min(devicePixelRatio || 1, 2);
+  const resize = () => { W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; c.setTransform(dpr,0,0,dpr,0,0); c.imageSmoothingEnabled = false; };
+  resize(); addEventListener('resize', resize);
+
+  const colors = ['#ffc9e4', '#ffa6d2', '#ff82bf', '#f06eb0'];
+  const shapes = [[[0,0],[1,0],[0,1]], [[0,0],[1,1]], [[0,0],[1,0],[1,1],[2,1]], [[0,0],[0,1],[1,1]], [[0,0]]];
+  const n = Math.round(Math.min(W, 900) / 14);
+  const ps = Array.from({ length: n }, () => ({
+    x: Math.random() * W, y: Math.random() * H, u: 5 + Math.random() * 9,
+    sh: shapes[Math.random() * shapes.length | 0], col: colors[Math.random() * colors.length | 0],
+    a: Math.random() * 6.28, va: (Math.random() - .5) * 1.6, vy: 25 + Math.random() * 55,
+    sw: Math.random() * 6.28, sa: 10 + Math.random() * 25, born: performance.now() + Math.random() * 900
+  }));
+
+  let last = performance.now();
+  (function loop(now) {
+    const dt = Math.min((now - last) / 1000, .05); last = now;
+    c.clearRect(0, 0, W, H);
+    for (const p of ps) {
+      p.y += p.vy * dt; p.a += p.va * dt; p.sw += dt * 1.2;
+      if (p.y > H + 40) { p.y = -40; p.x = Math.random() * W; }
+      c.globalAlpha = Math.min(Math.max((now - p.born) / 800, 0), 1);
+      c.save(); c.translate(p.x + Math.sin(p.sw) * p.sa, p.y); c.rotate(p.a);
+      c.fillStyle = p.col;
+      for (const [dx, dy] of p.sh) c.fillRect(dx * p.u, dy * p.u, p.u, p.u);
+      c.restore();
+    }
+    requestAnimationFrame(loop);
+  })(last);
+}
+
+/* старт после загрузки шрифта (иначе буквы «прыгнут») */
+Promise.race([
+  document.fonts.load('100px Sacramento'),
+  new Promise(r => setTimeout(r, 2500))
+]).then(() => requestAnimationFrame(startWriting));
+</script>
+</body>
+</html>
